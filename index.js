@@ -1,33 +1,67 @@
-class Account {
+// basic account data
 
+class Account {
+  // account name and transaction storage
   constructor(username) {
     this.username = username;
-    this.balance = 0;
+    this.transactions = [];
   }
+  // calculates and returns balance from transaction history
+  get balance() {
+    let balance = 0;
+    for (const t of this.transactions) {
+      balance += t.value;
+    }
+    return balance.toFixed(2);
+  }
+  // pushes new transaction to history
+  addTransaction(transaction) {
+    this.transactions.push(transaction);
+  }
+
 }
 
-class Transaction {
 
+// transaction class
+
+class Transaction {
+  // inputs transaction amount to account
   constructor(amount, account) {
     this.amount = amount;
     this.account = account;
+  }
+  // includes date/time stamp to transaction
+  commit() {
+    this.time = new Date();
+    if (!this.isAllowed()) return false;
+    this.account.addTransaction(this);
+    return true;
   }
 
 }
 
 class Withdrawal extends Transaction {
-
-  commit() {
-    this.account.balance -= this.amount;
+  // subclass of Transaction. Returns negative amount to transaction history
+  get value() {
+    return -this.amount;
+  }
+  // validator. Returns false if withdrawal is more than account balance
+  isAllowed () {
+    return this.account.balance - this.amount >= 0;
   }
 
 }
 
 class Deposit extends Transaction {
-
-  commit() {
-    this.account.balance += this.amount;
+  // subclass of Transaction. Returns positive amount to transaction history
+  get value() {
+    return this.amount;
   }
+  // validator. Always true, storage necessary to avoid return of falsy to Transaction commit
+  isAllowed () {
+    return true;
+  }
+
 
 }
 
@@ -37,16 +71,29 @@ class Deposit extends Transaction {
 
 const myAccount = new Account('joao-jotao');
 
-t1 = new Withdrawal(50.25, myAccount);
-t1.commit();
-console.log('Transaction 1:', t1);
-
-t2 = new Withdrawal(9.99, myAccount);
-t2.commit();
-console.log('Transaction 2:', t2);
+console.log('Starting balance: ', myAccount.balance);
 
 t3 = new Deposit(120.00, myAccount);
-t3.commit();
-console.log('Transaction 3:', t3);
-
+console.log('Commit: ', t3.commit());
 console.log('Balance:', myAccount.balance);
+
+t2 = new Withdrawal(9.99, myAccount);
+console.log('\nCommit: ', t2.commit());
+console.log('Balance:', myAccount.balance);
+
+t1 = new Withdrawal(50.25, myAccount);
+console.log('\nCommit: ', t1.commit());
+console.log('Balance:', myAccount.balance);
+
+console.log('\nShould not be allowed:')
+
+t4 = new Withdrawal(59.77, myAccount);
+console.log('\nCommit: ', t4.commit());
+
+console.log('\nShould be allowed:')
+
+t4 = new Withdrawal(59.76, myAccount);
+console.log('\nCommit: ', t4.commit());
+
+console.log('\nBalance:', myAccount.balance);
+console.log('\nTransaction history: ', myAccount.transactions);
